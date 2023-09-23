@@ -23,16 +23,15 @@ struct Vertex {
 	float u, v;
 };
 
-// Define vertices for a rectangle (4 vertices)
+
 MyLib::Vertex vertices[4] = {
-	{ -0.5f, -0.5f, 0.0f, 0.0f, 0.0f }, // Bottom left
-	{  0.5f, -0.5f, 0.0f, 1.0f, 0.0f }, // Bottom right
-	{  0.5f,  0.5f, 0.0f, 1.0f, 1.0f }, // Top right
-	{ -0.5f,  0.5f, 0.0f, 0.0f, 1.0f }  // Top left
+	//x    y    z    u    v
+	{ -1, -1, 0.0, 0.0, 0.0 }, //Bottom left
+	{ 1, -1, 0.0, 1.0, 0.0 }, //Bottom right
+	{ 1,  1, 0.0, 1.0, 1.0 },  //Top right
+	{ -1, 1, 0.0, 0.0, 1.0 }  //Top left
 };
 
-
-// Define indices for a rectangle (6 indices, forming two triangles)
 unsigned int indices[6] = {
     0, 1, 2, // First triangle
     2, 3, 0  // Second triangle
@@ -41,7 +40,7 @@ unsigned int indices[6] = {
 float triangleColor[3] = { 1.0f, 0.5f, 0.0f };
 float triangleBrightness = 1.0f;
 
-bool showImGUIDemoWindow = true;
+bool showImGUIDemoWindow = false;
 bool drawWireframe = false;
 
 int main()
@@ -75,7 +74,7 @@ int main()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
 
-		glDisable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 
 	MyLib::Shader shader("assets/vertexShader.vert", "assets/fragmentShader.frag");
 	shader.use();
@@ -84,15 +83,32 @@ int main()
 
 	glBindVertexArray(vao);
 
+	// Set Values
+	float sunColor[3] = {0.76, 0.86, 0.14};
+	float dayColorTop[3] = { 1.0, 0.35, 0.77 };
+	float dayColorBottom[3] = { 0.56, 0.46, 0.92 };
+	float nightColorTop[3] = { 0.01, 0.05, 0.19 };
+	float nightColorBottom[3] = { 0.24, 0.27, 0.36 };
+	float sunSpeed = 1.0;
+	float sunSize = 0.2;
+	float buildingColor[3] = { 0.4, 0.4, 0.4 };
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 		glClearColor(0.3f, 0.4f, 0.9f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		//Set uniforms
-		// shader.setVec3("Color", triangleColor[0], triangleColor[1], triangleColor[2]);
-		// shader.setInt("Brightness", triangleBrightness);
+		shader.setVec2("aspectRatio", SCREEN_WIDTH, SCREEN_HEIGHT);
 		shader.setFloat("Time", glfwGetTime());
+		shader.setVec3("sunColor", sunColor[0], sunColor[1], sunColor[2]);
+		shader.setVec3("dayColorTop", dayColorTop[0], dayColorTop[1], dayColorTop[2]);
+		shader.setVec3("dayColorBottom", dayColorBottom[0], dayColorBottom[1], dayColorBottom[2]);
+		shader.setVec3("nightColorTop", nightColorTop[0], nightColorTop[1], nightColorTop[2]);
+		shader.setVec3("nightColorBottom", nightColorBottom[0], nightColorBottom[1], nightColorBottom[2]);
+		shader.setVec3("buildingColor", buildingColor[0], buildingColor[1], buildingColor[2]);
+		shader.setFloat("sunSpeed", sunSpeed);
+		shader.setFloat("sunSize", sunSize);
 
 		if (drawWireframe)
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -110,20 +126,25 @@ int main()
 			// Create ImGui UI for shader parameters
 			if (ImGui::CollapsingHeader("Speed Settings"))
 			{
-
+				ImGui::SliderFloat("Sun Speed", &sunSpeed, 0.1f, 5.0f); 
+				ImGui::SliderFloat("Sun Size", &sunSize, 0.1f, 0.9f);  
 			}
 
 			if (ImGui::CollapsingHeader("Color Settings"))
 			{
-
+				ImGui::ColorEdit3("Sun Color", sunColor);             
+				ImGui::ColorEdit3("Day Color Top", dayColorTop);      
+				ImGui::ColorEdit3("Day Color Bottom", dayColorBottom); 
+				ImGui::ColorEdit3("Night Color Top", nightColorTop);  
+				ImGui::ColorEdit3("Night Color Bottom", nightColorBottom);
+				ImGui::ColorEdit3("Building Color", buildingColor);   
 			}
-
 			ImGui::Begin("Settings");
 			ImGui::Checkbox("Show Demo Window", &showImGUIDemoWindow);
-			ImGui::ColorEdit3("Color", triangleColor);
+			ImGui::ColorEdit3("Triangle Color", triangleColor);
 			ImGui::SliderFloat("Brightness", &triangleBrightness, 0.0f, 1.0f);
+			ImGui::Checkbox("Draw Wireframe", &drawWireframe);
 			ImGui::End();
-
 
 			if (showImGUIDemoWindow)
 			{
@@ -143,4 +164,3 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
-
