@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include <BenFolder/shader.h>
 #include <ew/external/glad.h>
 #include <ew/ewMath/ewMath.h>
 #include <GLFW/glfw3.h>
@@ -16,30 +17,15 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 const int SCREEN_WIDTH = 1080;
 const int SCREEN_HEIGHT = 720;
 
+std::string vertexShaderSource = benShaderLib::loadShaderSourceFromFile("assets/vertexShader.vert");
+std::string fragmentShaderSource = benShaderLib::loadShaderSourceFromFile("assets/fragmentShader.frag");
+
 float vertices[9] = {
 	//x   //y  //z   
 	-0.5, -0.5, 0.0, 
 	 0.5, -0.5, 0.0,
 	 0.0,  0.5, 0.0 
 };
-
-const char* vertexShaderSource = R"(
-	#version 450
-	layout(location = 0) in vec3 vPos;
-	void main(){
-		gl_Position = vec4(vPos,1.0);
-	}
-)";
-
-const char* fragmentShaderSource = R"(
-	#version 450
-	out vec4 FragColor;
-	uniform vec3 _Color;
-	uniform float _Brightness;
-	void main(){
-		FragColor = vec4(_Color * _Brightness,1.0);
-	}
-)";
 
 float triangleColor[3] = { 1.0f, 0.5f, 0.0f };
 float triangleBrightness = 1.0f;
@@ -71,7 +57,7 @@ int main() {
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init();
 
-	unsigned int shader = createShaderProgram(vertexShaderSource, fragmentShaderSource);
+	unsigned int shader = createShaderProgram(vertexShaderSource.c_str(), fragmentShaderSource.c_str());
 	unsigned int vao = createVAO(vertices, 3);
 
 	glUseProgram(shader);
