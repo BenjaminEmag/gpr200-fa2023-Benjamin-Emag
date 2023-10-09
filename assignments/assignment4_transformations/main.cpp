@@ -8,15 +8,28 @@
 #include <imgui_impl_glfw.h>
 #include <imgui_impl_opengl3.h>
 
-#include <ew/shader.h>
 #include <ew/ewMath/vec3.h>
 #include <ew/procGen.h>
+
+#include "BenFolder/transformation.h"
+#include "ew/shader.h"
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 
 //Square aspect ratio for now. We will account for this with projection later.
 const int SCREEN_WIDTH = 720;
 const int SCREEN_HEIGHT = 720;
+
+myLib::Transform cubeTransforms[4]
+{
+	//position vec3, rotation vec3, scale vec3
+	{ew::Vec3(0.5f, 0.5f, 0.0f), ew::Vec3(0.0f, 0.0f, 0.0f), ew::Vec3(1.0f, 1.0f, 1.0f)},
+	{ew::Vec3(-0.5f, 0.5f, 0.0f), ew::Vec3(0.0f, 0.0f, 0.0f), ew::Vec3(1.0f, 1.0f, 1.0f)},
+	{ew::Vec3(-0.5f, -0.5f, 0.0f), ew::Vec3(0.0f, 0.0f, 0.0f), ew::Vec3(1.0f, 1.0f, 1.0f)},
+	{ew::Vec3(0.5f, -0.5f, 0.0f), ew::Vec3(0.0f, 0.0f, 0.0f), ew::Vec3(1.0f, 1.0f, 1.0f)}
+};
+
+const int NUM_CUBES = 4;
 
 int main() {
 	printf("Initializing...");
@@ -52,7 +65,8 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 
 	ew::Shader shader("assets/vertexShader.vert", "assets/fragmentShader.frag");
-	
+	myLib::Transform transform;
+
 	//Cube mesh
 	ew::Mesh cubeMesh(ew::createCube(0.5f));
 	
@@ -65,9 +79,14 @@ int main() {
 		//Set uniforms
 		shader.use();
 
-		//TODO: Set model matrix uniform
-
-		cubeMesh.draw();
+		//Set and draw all cubes
+		for (int i = 0; i < NUM_CUBES; i++)
+		{
+			//Set cube 
+			shader.setMat4("_Model", cubeTransforms[i].getModelMatrix());
+			//Draw cube
+			cubeMesh.draw();
+		}
 
 		//Render UI
 		{
@@ -76,6 +95,17 @@ int main() {
 			ImGui::NewFrame();
 
 			ImGui::Begin("Transform");
+			for (size_t i = 0; i < NUM_CUBES; i++)
+			{
+				ImGui::PushID(i);
+				if (ImGui::CollapsingHeader("Transform")) {
+					ImGui::DragFloat3("Position", &cubeTransforms[i].position.x, 0.05f);
+					ImGui::DragFloat3("Rotation", &cubeTransforms[i].rotation.x, 1.0f);
+					ImGui::DragFloat3("Scale", &cubeTransforms[i].scale.x, 0.05f);
+				}
+				ImGui::PopID();
+			}
+
 			ImGui::End();
 
 			ImGui::Render();
@@ -91,4 +121,3 @@ void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
 }
-
