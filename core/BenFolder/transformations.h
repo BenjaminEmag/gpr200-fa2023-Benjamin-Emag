@@ -1,10 +1,11 @@
 #pragma once
+#include "../ew/ewMath/ewMath.h"
 #include "../ew/ewMath/mat4.h"
 #include "../ew/ewMath/vec3.h"
-#include "../ew/ewMath/ewMath.h"
+#include "../ew/ewMath/vec4.h"
 
 namespace ml {
-	// Identity matrix
+	// Identity Matrix
 	inline ew::Mat4 Identity() {
 		return ew::Mat4(
 			1, 0, 0, 0,
@@ -12,122 +13,101 @@ namespace ml {
 			0, 0, 1, 0,
 			0, 0, 0, 1
 		);
-	};
+	}
 
-	// scaling on the x, y, and z axes
-	inline ew::Mat4 Scale(ew::Vec3 s) {
-		ew::Mat4 matrix = Identity();
-		matrix[0] *= s.x;
-		matrix[1] *= s.y;
-		matrix[2] *= s.z;
-		return matrix;
-	};
-
-	// rotating around the x axis in radians
-	inline ew::Mat4 RotateX(float rad) {
-		ew::Mat4 matrix = Identity();
-		matrix[1][1] = cos(rad);
-		matrix[1][2] = sin(rad);
-		matrix[2][1] = -sin(rad);
-		matrix[2][2] = cos(rad);
-		return matrix;
-	};
-
-	// rotate around y axis
-	inline ew::Mat4 RotateY(float rad) {
-		ew::Mat4 matrix = Identity();
-		matrix[0][0] = cos(rad);
-		matrix[2][0] = sin(rad);
-		matrix[0][2] = -sin(rad);
-		matrix[2][2] = cos(rad);
-		return matrix;
-	};
-
-	// rotate around z axis
-	inline ew::Mat4 RotateZ(float rad) {
-		ew::Mat4 matrix = Identity();
-		matrix[0][0] = cos(rad);
-		matrix[1][0] = -sin(rad);
-		matrix[0][1] = sin(rad);
-		matrix[1][1] = cos(rad);
-		return matrix;
-	};
-
-	// translate x,y,z
+	// Translate x, y, z
 	inline ew::Mat4 Translate(ew::Vec3 t) {
-		ew::Mat4 matrix = Identity();
-		matrix[3][0] += t.x;
-		matrix[3][1] += t.y;
-		matrix[3][2] += t.z;
-		return matrix;
+		return ew::Mat4(
+			1, 0, 0, t.x,
+			0, 1, 0, t.y,
+			0, 0, 1, t.z,
+			0, 0, 0, 1
+		);
+	}
+
+	// Scale on x, y, z axis
+	inline ew::Mat4 Scale(ew::Vec3 s) {
+		return ew::Mat4(
+			s.x, 0, 0, 0,
+			0, s.y, 0, 0,
+			0, 0, s.z, 0,
+			0, 0, 0, 1
+		);
+	}
+
+	// Rotation around x axis (pitch) in radians
+	inline ew::Mat4 RotateX(float rad) {
+		return ew::Mat4(
+			1, 0, 0, 0,
+			0, cos(rad), -sin(rad), 0,
+			0, sin(rad), cos(rad), 0,
+			0, 0, 0, 1
+		);
+	}
+
+	// Rotation around y axis (yaw) in radians
+	inline ew::Mat4 RotateY(float rad) {
+		return ew::Mat4(
+			cos(rad), 0, sin(rad), 0,
+			0, 1, 0, 0,
+			-sin(rad), 0, cos(rad), 0,
+			0, 0, 0, 1
+		);
+	}
+
+	// Rotation around z axis (roll) in radians
+	inline ew::Mat4 RotateZ(float rad) {
+		return ew::Mat4(
+			cos(rad), -sin(rad), 0, 0,
+			sin(rad), cos(rad), 0, 0,
+			0, 0, 1, 0,
+			0, 0, 0, 1
+		);
+	}
+
+	struct Transform {
+		ew::Vec3 position = ew::Vec3(0.0f, 0.0f, 0.0f);
+		ew::Vec3 rotation = ew::Vec3(0.0f, 0.0f, 0.0f); // Euler angles (degrees)
+		ew::Vec3 scale = ew::Vec3(1.0f, 1.0f, 1.0f);
+		ew::Mat4 getModelMatrix() const {
+			return ml::Translate(position) * ml::RotateY(rotation.y) * ml::RotateX(rotation.x) * ml::RotateZ(rotation.z) * ml::Scale(scale);
+		}
 	};
 
 	inline ew::Mat4 LookAt(ew::Vec3 eye, ew::Vec3 target, ew::Vec3 up) {
-		ew::Vec3 f1 = eye - target;
-		float f2 = ew::Magnitude(f1);
-		ew::Vec3 f = f1 / f2;
-		ew::Vec3 r1 = ew::Cross(up, f);
-		float r2 = ew::Magnitude(r1);
-		ew::Vec3 r = r1 / r2;
-		ew::Vec3 u1 = ew::Cross(f, r);
-		float u2 = ew::Magnitude(u1);
-		ew::Vec3 u = u1 / u2;
+		ew::Vec3 f = ew::Normalize(eye - target);
+		ew::Vec3 r = ew::Normalize(ew::Cross(up, f));
+		ew::Vec3 u = ew::Normalize(ew::Cross(f, r));
+		return ew::Mat4(
+			r.x, r.y, r.z, -1 * ew::Dot(r, eye),
+			u.x, u.y, u.z, -1 * ew::Dot(u, eye),
+			f.x, f.y, f.z, -1 * ew::Dot(f, eye),
+			0, 0, 0, 1
+		);
+	}
 
-		ew::Mat4 matrix = Identity();
-		matrix[0][0] = r.x;
-		matrix[1][0] = r.y;
-		matrix[2][0] = r.z;
-
-		matrix[0][1] = u.x;
-		matrix[1][1] = u.y;
-		matrix[2][1] = u.z;
-
-		matrix[0][2] = f.x;
-		matrix[1][2] = f.y;
-		matrix[2][2] = f.z;
-
-		matrix[3][0] = -(ew::Dot(r, eye));
-		matrix[3][1] = -(ew::Dot(u, eye));
-		matrix[3][2] = -(ew::Dot(f, eye));
-		return matrix;
-	};
-
+	// Orthographic projection
 	inline ew::Mat4 Orthographic(float height, float aspect, float near, float far) {
-		float width = aspect * height;
-
-		ew::Mat4 matrix = Identity();
-		matrix[0][0] = 2 / width;
-		matrix[1][1] = 2 / height;
-		matrix[2][2] = -(2 / far - near);
-
-		return matrix;
-	};
+		float width = height * aspect;
+		float r = width / 2;
+		float t = height / 2;
+		float l = -r;
+		float b = -t;
+		return ew::Mat4(
+			2 / (r - l), 0, 0, -(r + l) / (r - l),
+			0, 2 / (t - b), 0, -(t + b) / (t - b),
+			0, 0, -2 / (far - near), -(far + near) / (far - near),
+			0, 0, 0, 1
+		);
+	}
 
 	inline ew::Mat4 Perspective(float fov, float aspect, float near, float far) {
-		ew::Mat4 matrix = Identity();
 		fov = ew::Radians(fov);
-		matrix[0][0] = (1 / tan(fov / 2) * aspect);
-		matrix[1][1] = (1 / tan(fov / 2));
-		matrix[2][2] = ((near + far) / (near - far));
-		matrix[2][3] = -1;
-		matrix[3][2] = (2 * far * near / (near - far));
-		matrix[3][3] = 0;
-		return matrix;
+		return ew::Mat4(
+			1 / (tan(fov / 2) * aspect), 0, 0, 0,
+			0, 1 / tan(fov / 2), 0, 0,
+			0, 0, (near + far) / (near - far), (2 * far * near) / (near - far),
+			0, 0, -1, 0
+		);
 	};
-
-	struct Transform {
-		ew::Vec3 position = ew::Vec3(0.0, 0.0, 0.0);
-		ew::Vec3 rotation = ew::Vec3(0.0, 0.0, 0.0);
-		ew::Vec3 scale = ew::Vec3(1.0, 1.0, 1.0);
-		ew::Mat4 getModelMatrix() const {
-			ew::Mat4 scaleMatrix = ml::Scale(scale);
-			ew::Mat4 rotationMatrixZ = RotateZ(ew::Radians(rotation.z));
-			ew::Mat4 rotationMatrixX = RotateX(ew::Radians(rotation.x));
-			ew::Mat4 rotationMatrixY = RotateY(ew::Radians(rotation.y));
-			ew::Mat4 translationMatrix = ml::Translate(position);
-
-			ew::Mat4 matrix = rotationMatrixY * translationMatrix * rotationMatrixX * rotationMatrixZ * scaleMatrix;
-			return matrix;
-		}
-	};
-}
+};
