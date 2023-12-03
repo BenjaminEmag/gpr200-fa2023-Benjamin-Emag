@@ -1,4 +1,5 @@
 #version 450
+
 out vec4 FragColor;
 
 in Surface {
@@ -8,6 +9,7 @@ in Surface {
 } fs_in;
 
 uniform sampler2D _Texture;
+uniform sampler2D _NormalMap;  // Add the normal map sampler
 
 struct Light {
     vec3 position;
@@ -31,6 +33,11 @@ uniform vec3 _Camerapose;
 void main() 
 {
     vec3 normal = normalize(fs_in.WorldNormal);
+    
+    // Use the normal map to modify the normal
+    vec3 normalFromMap = texture(_NormalMap, fs_in.UV).xyz * 2.0 - 1.0;
+    normal = normalize(normal * (1.0 - _Material.specular) + normalFromMap * _Material.specular);
+
     vec3 viewDir = normalize(_Camerapose - fs_in.WorldPosition);
 
     vec3 totalAmbient = vec3(0.0);
