@@ -9,7 +9,7 @@ in Surface {
 } fs_in;
 
 uniform sampler2D _Texture;
-uniform sampler2D _NormalMap;  // Add the normal map sampler
+uniform sampler2D _NormalMap;
 
 struct Light {
     vec3 position;

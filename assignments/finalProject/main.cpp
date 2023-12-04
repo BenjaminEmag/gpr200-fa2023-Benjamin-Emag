@@ -16,6 +16,7 @@
 #include <ew/transform.h>
 #include <ew/camera.h>
 #include <ew/cameraController.h>
+#include <BenFolder/cubeMap.h>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void resetCamera(ew::Camera& camera, ew::CameraController& cameraController);
@@ -39,6 +40,16 @@ struct Material {
 	float diffuseK = (float)0.5; // (0-1)
 	float specular = (float)0.2; // (0-1)
 	float shininess = (float)128.0;
+};
+
+std::string faces[6]
+{
+		"assets/skybox/right.jpg",
+		"assets/skybox/left.jpg",
+		"assets/skybox/top.jpg",
+		"assets/skybox/bottom.jpg",
+		"assets/skybox/front.jpg",
+		"assets/skybox/back.jpg"
 };
 
 int main() {
@@ -71,8 +82,11 @@ int main() {
 	glEnable(GL_DEPTH_TEST);
 
 	ew::Shader shader("assets/defaultLit.vert", "assets/defaultLit.frag");
+	ew::Shader skyBoxShader("assets/skybox.vert", "assets/skybox.frag");
+
 	unsigned int waterTexture = ew::loadTexture("assets/water_texture.jpg", GL_REPEAT, GL_LINEAR);
 	unsigned int normalMapTexture = ew::loadTexture("assets/pond_normal_map.jpg", GL_REPEAT, GL_LINEAR);
+	unsigned int skyBoxTexture = MyLib::loadCubemap(faces);
 
 	ew::Shader unlitShader("assets/unlit.vert", "assets/unlit.frag");
 
@@ -121,6 +135,18 @@ int main() {
 		//RENDER
 		glClearColor(bgColor.x, bgColor.y, bgColor.z, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+		//Skybox
+		glDepthMask(GL_FALSE);
+		skyBoxShader.use();
+		skyBoxShader.setMat4("_ViewProjection", camera.ProjectionMatrix() * camera.ViewMatrix());
+
+
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
+		skyBoxShader.setFloat("skybox", 3);
+		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glDepthMask(GL_TRUE);
 
 		shader.use();
 		shader.setFloat("_Time", time);
