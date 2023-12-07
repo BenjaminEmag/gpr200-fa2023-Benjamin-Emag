@@ -120,6 +120,10 @@ int main() {
 
 	resetCamera(camera, cameraController);
 
+	// Initalize skyboxVAO
+
+	unsigned int skyboxVAO = MyLib::generateSkyboxVAO(50);
+
 	while (!glfwWindowShouldClose(window)) {
 		glfwPollEvents();
 
@@ -136,16 +140,30 @@ int main() {
 		glClearColor(bgColor.x, bgColor.y, bgColor.z, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
 		//Skybox
 		glDepthMask(GL_FALSE);
+		glEnable(GL_DEPTH_TEST);
+		glClear(GL_DEPTH_BUFFER_BIT);
+
 		skyBoxShader.use();
-		skyBoxShader.setMat4("_ViewProjection", camera.ProjectionMatrix() * camera.ViewMatrix());
+		skyBoxShader.setMat4("projection", camera.ProjectionMatrix());
+		skyBoxShader.setMat4("view", camera.ViewMatrix());
 
-
+		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
-		skyBoxShader.setFloat("skybox", 3);
+		skyBoxShader.setInt("skybox", 3);
+
+		// Bind the skybox VAO
+		glBindVertexArray(skyboxVAO);
+
 		glDrawArrays(GL_TRIANGLES, 0, 36);
+
+		// Unbind the skybox VAO
+		glBindVertexArray(0);
+
+		glDepthMask(GL_TRUE);
+
+
 		glDepthMask(GL_TRUE);
 
 		shader.use();
