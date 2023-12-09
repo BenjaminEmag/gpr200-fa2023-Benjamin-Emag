@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include <math.h>
 #include <string>
-#include <random>
 
 #include <ew/external/glad.h>
 #include <ew/ewMath/ewMath.h>
@@ -102,16 +101,10 @@ int main() {
 	Light lights[LIGHT_MAX];
 	Material material1;
 
-	// random on startup can't figure out how to make it random when removing them and all
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	std::uniform_real_distribution<float> dis(-3.0f, 3.0f);
-	std::uniform_real_distribution<float> colorDis(0.0f, 1.0f);
-
 	for (auto i = 0; i < LIGHT_MAX; i++)
 	{
-		lights[i].position = ew::Vec3(dis(gen), 2.5, dis(gen));
-		lights[i].color = ew::Vec3(colorDis(gen), colorDis(gen), colorDis(gen));
+		lights[i].position = ew::Vec3(i, i, i);
+		lights[i].color = ew::Vec3(1.0, 1.0, 1.0);
 	}
 
 	// Initialize transforms
@@ -165,7 +158,6 @@ int main() {
 		glBindVertexArray(0);
 
 		glDepthMask(GL_TRUE);
-
 
 		glDepthMask(GL_TRUE);
 
