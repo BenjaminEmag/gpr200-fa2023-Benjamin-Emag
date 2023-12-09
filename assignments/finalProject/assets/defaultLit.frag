@@ -10,6 +10,7 @@ in Surface {
 
 uniform sampler2D _Texture;
 uniform sampler2D _NormalMap;
+uniform samplerCube skybox;
 
 struct Light {
     vec3 position;
@@ -64,6 +65,17 @@ void main()
         totalSpecular += specular;
     }
 
-    vec3 finalColor = texture(_Texture, fs_in.UV).rgb * (totalAmbient + totalDiffuse + totalSpecular);
+    // Calculate reflection vector
+    vec3 reflection = reflect(-viewDir, normal);
+
+    // Sample the skybox with the reflection vector
+    vec3 reflectionColor = texture(skybox, reflection).rgb;
+
+    // Combine reflection and other lighting components
+    vec3 finalColor = texture(_Texture, fs_in.UV).rgb * (_Material.ambientK + totalDiffuse + totalSpecular);
+    
+    // Blend the reflection color with the final color
+    finalColor = mix(finalColor, reflectionColor, 0.5);  // You can adjust the blend factor as needed
+
     FragColor = vec4(finalColor, 1.0);
 }

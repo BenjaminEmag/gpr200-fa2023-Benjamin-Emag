@@ -30,6 +30,9 @@ ew::Vec3 bgColor = ew::Vec3(0.1f);
 ew::Camera camera;
 ew::CameraController cameraController;
 
+float refractiveIndex = 1.33; 
+
+
 struct Light {
 	ew::Vec3 position = ew::Vec3(0.0, 0.0, 0.0);
 	ew::Vec3 color = ew::Vec3(0.0, 0.0, 0.0);
@@ -169,10 +172,18 @@ int main() {
 		shader.use();
 		shader.setFloat("_Time", time);
 
+		// refraction unfiforms
+		shader.setFloat("_RefractiveIndex", refractiveIndex);
+		
 		// Bind textures to texture units
 		glActiveTexture(GL_TEXTURE0);  
+		
 		glBindTexture(GL_TEXTURE_2D, waterTexture);
 		shader.setInt("_Texture", 0);
+
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
+		skyBoxShader.setInt("skybox", 4);
 
 		glActiveTexture(GL_TEXTURE1);  
 		glBindTexture(GL_TEXTURE_2D, normalMapTexture);
