@@ -29,8 +29,11 @@ ew::Vec3 bgColor = ew::Vec3(0.1f);
 ew::Camera camera;
 ew::CameraController cameraController;
 
-float refractiveIndex = 1.33; 
+float _ReflectionBlendFactor = 0.5f;
+float _NormalMapStrength = 1.0f;
+float _UVSpeed = 0.1f;
 
+int scale = 50;
 
 struct Light {
 	ew::Vec3 position = ew::Vec3(0.0, 0.0, 0.0);
@@ -38,9 +41,9 @@ struct Light {
 };
 
 struct Material {
-	float ambientK = (float)0.2; // (0-1)
-	float diffuseK = (float)0.5; // (0-1)
-	float specular = (float)0.2; // (0-1)
+	float ambientK = (float)0.13; // (0-1)
+	float diffuseK = (float)0.19; // (0-1)
+	float specular = (float)0.5; // (0-1)
 	float shininess = (float)128.0;
 };
 
@@ -117,7 +120,6 @@ int main() {
 	resetCamera(camera, cameraController);
 
 	// Initalize skyboxVAO
-
 	unsigned int skyboxVAO = MyLib::generateSkyboxVAO(50);
 
 	while (!glfwWindowShouldClose(window)) {
@@ -165,11 +167,12 @@ int main() {
 		shader.setFloat("_Time", time);
 
 		// refraction unfiforms
-		shader.setFloat("_RefractiveIndex", refractiveIndex);
-		
+		shader.setFloat("_ReflectionBlendFactor", _ReflectionBlendFactor);
+		shader.setFloat("_NormalMapStrength", _NormalMapStrength);
+		shader.setFloat("_UVSpeed", _UVSpeed);
 		// Bind textures to texture units
-		glActiveTexture(GL_TEXTURE0);  
-		
+		glActiveTexture(GL_TEXTURE0);
+
 		glBindTexture(GL_TEXTURE_2D, waterTexture);
 		shader.setInt("_Texture", 0);
 
@@ -177,9 +180,9 @@ int main() {
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
 		skyBoxShader.setInt("skybox", 4);
 
-		glActiveTexture(GL_TEXTURE1);  
+		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, normalMapTexture);
-		shader.setInt("_NormalMap", 1); 
+		shader.setInt("_NormalMap", 1);
 
 		shader.setMat4("_ViewProjection", camera.ProjectionMatrix() * camera.ViewMatrix());
 		shader.setMat4("_Model", pondTransform.getModelMatrix());
@@ -227,22 +230,11 @@ int main() {
 					resetCamera(camera, cameraController);
 				}
 			}
-			ImGui::ColorEdit3("BG color", &bgColor.x);
 
-			ImGui::SliderInt("Number of Lights", &numLights, 0, LIGHT_MAX);
-
-			for (auto i = 0; i < numLights; i++) {
-				if (ImGui::CollapsingHeader(("Light " + std::to_string(i + 1)).c_str())) {
-					ImGui::DragFloat3("Light Position", &lights[i].position.x, 0.1f);
-					ImGui::ColorEdit3("Light Color", &lights[i].color.x);
-				}
-			}
-
-			// material values
-			ImGui::DragFloat("ambientK", &material1.ambientK, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("diffuseK", &material1.diffuseK, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("specular", &material1.specular, 0.01f, 0.0f, 1.0f);
-			ImGui::DragFloat("shininess", &material1.shininess, 1.0f, 0.0f, 6400.0f);
+			ImGui::SliderFloat("Specular Intensity", &material1.specular, 0.0f, 1.0f, "Intensity: %.2f");
+			ImGui::SliderFloat("_ReflectionBlendFactor", &_ReflectionBlendFactor, 0.0f, 1.0f, "Blend Factor: %.2f");
+			ImGui::SliderFloat("_NormalMapStrength", &_NormalMapStrength, 0.0f, 2.0f, "Strength: %.2f");
+			ImGui::SliderFloat("_UVSpeed", &_UVSpeed, 0.01f, 1.0f, "Speed: %.2f");
 
 			ImGui::End();
 

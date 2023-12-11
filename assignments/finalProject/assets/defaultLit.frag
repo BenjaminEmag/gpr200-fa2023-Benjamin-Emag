@@ -31,13 +31,16 @@ uniform Material _Material;
 
 uniform vec3 _Camerapose;
 
+uniform float _NormalMapStrength; 
+uniform float _ReflectionBlendFactor;
+
 void main() 
 {
     vec3 normal = normalize(fs_in.WorldNormal);
     
     // Use the normal map to modify the normal
     vec3 normalFromMap = texture(_NormalMap, fs_in.UV).xyz * 2.0 - 1.0;
-    normal = normalize(normal * (1.0 - _Material.specular) + normalFromMap * _Material.specular);
+    normal = normalize(normal * (1.0 - _Material.specular) + normalFromMap * _Material.specular * _NormalMapStrength);
 
     vec3 viewDir = normalize(_Camerapose - fs_in.WorldPosition);
 
@@ -75,7 +78,7 @@ void main()
     vec3 finalColor = texture(_Texture, fs_in.UV).rgb * (_Material.ambientK + totalDiffuse + totalSpecular);
     
     // Blend the reflection color with the final color
-    finalColor = mix(finalColor, reflectionColor, 0.5);  // You can adjust the blend factor as needed
+    finalColor = mix(finalColor, reflectionColor, _ReflectionBlendFactor);
 
     FragColor = vec4(finalColor, 1.0);
 }

@@ -14,11 +14,12 @@ uniform mat4 _Model;
 uniform mat4 _ViewProjection;
 
 uniform float _Time;
+uniform float _UVSpeed; 
 
 void main() {
     vs_out.UV = vUV;
     
-    vec2 animatedUV = vUV + vec2(_Time * 0.01, _Time * 0.05);
+    vec2 animatedUV = vUV + vec2(_Time * _UVSpeed, _Time * _UVSpeed);
     vs_out.UV = animatedUV;
 
     vs_out.WorldPosition = (_Model * vec4(vPos, 1.0)).xyz;

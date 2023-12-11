@@ -242,25 +242,27 @@ namespace ew {
 		// VERTICES
 		for (size_t i = 0; i <= subdivisions; ++i)
 		{
+			// theta based on the current subdivision
 			float theta = ((float)i / subdivisions) * ew::TAU;
 
 			Vertex v;
-			v.pos.x = cosf(theta) * radius;
-			v.pos.y = 0.0f;
-			v.pos.z = sinf(theta) * radius;
+			v.pos.x = cosf(theta) * radius; // X position using cosine
+			v.pos.y = 0.0f;                  // Y position at the center of the pond
+			v.pos.z = sinf(theta) * radius; // Z position using sine
 
 			v.normal = ew::Vec3(0, 1, 0);
 			v.uv.x = 0.5f + 0.5f * cosf(theta); 
-			v.uv.y = 0.5f + 0.5f * sinf(theta);
+			v.uv.y = 0.5f - 0.5f * sinf(theta);
+
 			mesh.vertices.push_back(v);
 		}
 
-		// INDICES
+		// INDICES: Generate indices for triangles to form the circular shape
 		for (size_t i = 0; i < subdivisions; ++i)
 		{
-			mesh.indices.push_back(0);
-			mesh.indices.push_back(i + 1);
-			mesh.indices.push_back(i + 2);
+			mesh.indices.push_back(0);      
+			mesh.indices.push_back(i + 1);   
+			mesh.indices.push_back(i + 2);   
 		}
 
 		return mesh;
