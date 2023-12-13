@@ -171,18 +171,18 @@ int main() {
 		shader.setFloat("_NormalMapStrength", _NormalMapStrength);
 		shader.setFloat("_UVSpeed", _UVSpeed);
 		// Bind textures to texture units
-		glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE1);
 
 		glBindTexture(GL_TEXTURE_2D, waterTexture);
-		shader.setInt("_Texture", 0);
+		shader.setInt("_Texture", 1);
 
-		glActiveTexture(GL_TEXTURE4);
+		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
-		skyBoxShader.setInt("skybox", 4);
+		skyBoxShader.setInt("skybox", 2);
 
-		glActiveTexture(GL_TEXTURE1);
+		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_2D, normalMapTexture);
-		shader.setInt("_NormalMap", 1);
+		shader.setInt("_NormalMap", 3);
 
 		shader.setMat4("_ViewProjection", camera.ProjectionMatrix() * camera.ViewMatrix());
 		shader.setMat4("_Model", pondTransform.getModelMatrix());
